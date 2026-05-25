@@ -40,3 +40,38 @@ exports.handler = async (event) => {
     prompt = body.prompt;
     if (!prompt || typeof prompt !== "string" || prompt.length > 3000) {
       throw new Error("bad prompt");
+    }
+  } catch (e) {
+    return { statusCode: 400, headers, body: JSON.stringify({ error: "Invalid request" }) };
+  }
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": process.env.ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 900,
+        system: "You are an elite fitness coach. Return ONLY valid JSON with no markdown or extra text.",
+        messages: [{ role: "user", content: prompt }],
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("API error: " + response.status);
+    }
+
+    const data = await response.json();
+    const text = (data.content.find((b) => b.type === "text") || {}).text || "";
+    const cleaned = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    const circuit = JSON.parse(cleaned);
+    return { statusCode: 200, headers, body: JSON.stringify(circuit) };
+  } catch (e) {
+    console.error("Generate error:", e);
+    return { statusCode: 500, headers, body: JSON.stringify({ error: "Generation failed. Please try again." }) };
+  }
+};
