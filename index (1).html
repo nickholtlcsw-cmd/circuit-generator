@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Free HIIT Circuit Generator | Nick Holt LCSW | West LA</title>
+  <meta name="description" content="Generate a personalized HIIT circuit tailored to your equipment, environment, injuries, and energy level. Free tool from Nick Holt, LCSW — West LA therapist and fitness enthusiast.">
+  <meta name="keywords" content="HIIT circuit generator, shoulder-safe workout, injury-modified exercise, personalized workout, West LA, Nick Holt LCSW">
+  <meta property="og:title" content="Free HIIT Circuit Generator — nickholtlcsw.com">
+  <meta property="og:description" content="AI-powered workout circuits built around your body, your equipment, and how you feel today.">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; padding: 0; background: #0d0d1a; color: #fff; font-family: 'DM Sans', sans-serif; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+    button { font-family: 'DM Sans', sans-serif; cursor: pointer; }
+    a { color: #4FC3F7; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Site header */
+    .site-header {
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 100%;
+    }
+    .site-header .logo { font-size: 14px; font-weight: 700; color: #fff; }
+    .site-header .logo span { color: #CE93D8; }
+    .site-header .back-link { font-size: 12px; color: rgba(255,255,255,0.45); display: flex; align-items: center; gap: 5px; }
+
+    /* Tool wrapper */
+    .tool-wrap { max-width: 520px; margin: 0 auto; padding: 0 0 80px; }
+
+    /* Disclaimer banner */
+    .disclaimer-bar {
+      background: rgba(255,183,77,0.08);
+      border: 1px solid rgba(255,183,77,0.2);
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin: 16px 16px 0;
+      font-size: 11px;
+      color: rgba(255,255,255,0.5);
+      line-height: 1.5;
+    }
+    .disclaimer-bar a { color: #FFB74D; font-weight: 600; }
+
+    /* Footer */
+    .site-footer {
+      background: rgba(0,0,0,0.3);
+      border-top: 1px solid rgba(255,255,255,0.07);
+      padding: 28px 20px;
+      text-align: center;
+      font-size: 12px;
+      color: rgba(255,255,255,0.3);
+      line-height: 1.8;
+    }
+    .site-footer a { color: rgba(255,255,255,0.45); }
+
+    /* Disclaimer modal */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+      z-index: 999; display: flex; align-items: flex-end;
+    }
+    .modal-sheet {
+      background: #1a1a2e; border-radius: 24px 24px 0 0;
+      width: 100%; max-height: 82vh; overflow-y: auto;
+      padding: 24px 20px 40px;
+    }
+    .modal-sheet h2 { font-size: 18px; font-weight: 700; margin: 0 0 16px; }
+    .modal-sheet h3 { font-size: 13px; font-weight: 700; color: #CE93D8; margin: 18px 0 6px; }
+    .modal-sheet p { font-size: 13px; color: rgba(255,255,255,0.65); line-height: 1.6; margin: 0 0 10px; }
+    .modal-accept {
+      width: 100%; padding: 14px; border-radius: 12px; border: none; margin-top: 20px;
+      background: linear-gradient(135deg, #CE93D8, #4FC3F7);
+      color: #000; font-size: 15px; font-weight: 800; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Site header -->
+  <header class="site-header">
+    <div class="logo">Nick Holt <span>LCSW</span></div>
+    <a href="https://nickholtlcsw.com" class="back-link">← nickholtlcsw.com</a>
+  </header>
+
+  <!-- React app mounts here -->
+  <div id="root"></div>
+
+  <!-- Static footer -->
+  <footer class="site-footer">
+    <div>
+      This tool is provided free of charge as an educational resource.<br>
+      AI-generated workouts are not medical or therapeutic advice.<br>
+      <a href="#disclaimer" id="show-disclaimer-footer">Read full disclaimer</a>
+    </div>
+    <div style="margin-top:14px;">
+      &copy; 2026 Nick Holt, LCSW &nbsp;|&nbsp;
+      <a href="https://nickholtlcsw.com">nickholtlcsw.com</a> &nbsp;|&nbsp;
+      West Los Angeles, CA
+    </div>
+  </footer>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+// ── DATA ──────────────────────────────────────────────────────
+const ENVIRONMENTS = [
+  { id:"gym",       label:"Gym",         equip:["Bike","Ski Erg","TRX","Dumbbells","Bands","Kettlebell","Bench"] },
+  { id:"rooftop",   label:"Rooftop",     equip:["TRX","Bands","Kettlebell","Running"] },
+  { id:"beach",     label:"Beach/Sand",  equip:["Running","Bands","Med Ball"] },
+  { id:"park",      label:"Park",        equip:["Running","Bands","TRX","Pull-up Bar"] },
+  { id:"home",      label:"Home",        equip:["Dumbbells","Bands","Jump Rope","Plyo Box"] },
+  { id:"hotel",     label:"Hotel Room",  equip:["Bands","Jump Rope"] },
+  { id:"stairwell", label:"Stairwell",   equip:["Stairs","Bands","Running"] },
+  { id:"court",     label:"Court",       equip:["Running","Jump Rope","Med Ball"] },
+  { id:"pool",      label:"Pool/Deck",   equip:["Running","Bands"] },
+];
+const ENV_EMOJIS = { gym:"🏋️", rooftop:"🏗️", beach:"🏖️", park:"🌳", home:"🏠", hotel:"🏨", stairwell:"🪜", court:"🏀", pool:"🏊️" };
+
+const EQUIP_GROUPS = [
+  { group:"Cardio", items:["Bike","Ski Erg","Rower","Fan Bike","Assault Bike","Treadmill","Running","Jump Rope","Stairs"] },
+  { group:"Free Weights", items:["Barbell","Dumbbells","Kettlebell","Sandbag","Med Ball"] },
+  { group:"Resistance", items:["Bands","Cable Machine"] },
+  { group:"Suspension & Bar", items:["TRX","Pull-up Bar","Gym Rings","Parallettes"] },
+  { group:"Plyo & Stability", items:["Plyo Box","Bench","Bosu","Yoga Ball","Balance Disc"] },
+  { group:"Other", items:["Battle Ropes","Sled"] },
+];
+
+const BODY_PARTS = [
+  { id:"shoulder",   label:"Shoulder",    recovering:true  },
+  { id:"lowerBack",  label:"Lower Back",  recovering:false },
+  { id:"knee",       label:"Knee",        recovering:false },
+  { id:"hip",        label:"Hip",         recovering:false },
+  { id:"ankle",      label:"Ankle/Foot",  recovering:false },
+  { id:"wristElbow", label:"Wrist/Elbow", recovering:false },
+  { id:"hamstring",  label:"Hamstring",   recovering:false },
+  { id:"quad",       label:"Quad",        recovering:false },
+  { id:"calf",       label:"Calf",        recovering:false },
+  { id:"neck",       label:"Neck",        recovering:false },
+];
+
+const ENERGY_LEVELS = [
+  { id:"spent",    label:"Spent",    emoji:"💀", desc:"Active recovery only" },
+  { id:"fatigued", label:"Fatigued", emoji:"😴", desc:"Low-moderate intensity" },
+  { id:"normal",   label:"Normal",   emoji:"😐", desc:"Standard session" },
+  { id:"fresh",    label:"Fresh",    emoji:"💪", desc:"Full intensity" },
+  { id:"peaked",   label:"Peaked",   emoji:"🔥", desc:"Max effort" },
+];
+
+const FOCUS_OPTIONS = [
+  "Balanced","Cardio-heavy","Strength-heavy","Core focus",
+  "Lower body","Upper body","Active recovery","Power & explosiveness","Endurance",
+];
+
+const MUSCLE_OPTIONS = [
+  "Glutes","Hamstrings","Quads","Calves","Core",
+  "Lower back","Upper back","Chest","Arms","Posterior chain","Full body",
+];
+
+// ── HELPERS ───────────────────────────────────────────────────
+function injuryColor(s) {
+  if (s === "Injured") return "#ef5350";
+  if (s === "Sore" || s === "Recovering") return "#FFB74D";
+  return "#81C784";
+}
+function energyCol(id) {
+  return { spent:"#80DEEA", fatigued:"#81C784", normal:"#4FC3F7", fresh:"#FFB74D", peaked:"#F06292" }[id] || "#4FC3F7";
+}
+function intensityCol(i) {
+  return { Low:"#81C784", Moderate:"#4FC3F7", High:"#FFB74D", Max:"#F06292" }[i] || "#fff";
+}
+
+// ── API CALL (via Netlify function — key is server-side) ──────
+async function generate(prompt) {
+  const res = await fetch("/.netlify/functions/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "Request failed");
+  }
+  return res.json();
+}
+
+// ── DISCLAIMER MODAL ──────────────────────────────────────────
+function DisclaimerModal({ onAccept }) {
+  return (
+    <div className="modal-overlay">
+      <div className="modal-sheet">
+        <h2>Before You Begin</h2>
+        <p>Please read and accept the following before using the Circuit Generator.</p>
+
+        <h3>Not Medical or Therapeutic Advice</h3>
+        <p>Workouts generated by this tool are created by artificial intelligence for general informational purposes only. They do not constitute medical advice, clinical guidance, or therapeutic recommendations.</p>
+
+        <h3>Consult a Professional</h3>
+        <p>Always consult a qualified physician, physical therapist, or certified fitness professional before beginning any new exercise program — especially if you have a pre-existing injury, health condition, or have been inactive.</p>
+
+        <h3>Professional Scope</h3>
+        <p>Nick Holt, LCSW, BCD is a licensed clinical social worker. His license pertains to mental health services. He is not a physician, physical therapist, or certified personal trainer. Use of this tool does not create a professional or therapeutic relationship.</p>
+
+        <h3>Assumption of Risk</h3>
+        <p>Physical exercise carries inherent risks. By using this tool and performing any generated workouts, you voluntarily assume all risks associated with physical activity. To the fullest extent permitted by law, Nick Holt LCSW and nickholtlcsw.com are not liable for any injury or harm resulting from use of this tool.</p>
+
+        <h3>AI-Generated Content</h3>
+        <p>Circuits are generated by Claude (Anthropic). AI-generated content may be inaccurate or unsuitable for your specific situation. Use your judgment and stop any exercise that causes pain.</p>
+
+        <button className="modal-accept" onClick={onAccept}>
+          I understand — let's go
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── MAIN APP ──────────────────────────────────────────────────
+function CircuitGenerator() {
+  const [accepted, setAccepted] = useState(false);
+
+  // Check if already accepted this session
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem("disclaimer_accepted") === "1") setAccepted(true);
+    } catch(e) {}
+  }, []);
+
+  function handleAccept() {
+    try { sessionStorage.setItem("disclaimer_accepted", "1"); } catch(e) {}
+    setAccepted(true);
+  }
+
+  const initInjuries = {};
+  BODY_PARTS.forEach((bp) => { initInjuries[bp.id] = bp.id === "shoulder" ? "Recovering" : "Good"; });
+
+  const [env, setEnv] = useState("gym");
+  const [equip, setEquip] = useState(new Set(["Bike","Ski Erg","TRX","Dumbbells","Bands","Kettlebell","Bench"]));
+  const [injuries, setInjuries] = useState(initInjuries);
+  const [energy, setEnergy] = useState("normal");
+  const [focus, setFocus] = useState("Balanced");
+  const [muscles, setMuscles] = useState([]);
+  const [generating, setGenerating] = useState(false);
+  const [result, setResult] = useState(null);
+  const [genError, setGenError] = useState("");
+  const [saved, setSaved] = useState([]);
+  const [showSaved, setShowSaved] = useState(false);
+
+  function setInjury(part, status) { setInjuries((p) => ({ ...p, [part]: status })); }
+  function toggleEquip(id) { setEquip((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; }); }
+  function toggleMuscle(m) { setMuscles((p) => p.includes(m) ? p.filter((x) => x !== m) : [...p, m]); }
+  function handleEnvChange(id) { setEnv(id); const e = ENVIRONMENTS.find((x) => x.id === id); if (e) setEquip(new Set(e.equip)); }
+
+  async function handleGenerate() {
+    setGenerating(true); setGenError(""); setResult(null);
+    const envObj = ENVIRONMENTS.find((e) => e.id === env);
+    const energyObj = ENERGY_LEVELS.find((e) => e.id === energy);
+    const equipStr = [...equip].join(", ") || "bodyweight";
+    const injStr = BODY_PARTS.filter((bp) => injuries[bp.id] !== "Good")
+      .map((bp) => { const s = injuries[bp.id]; const d = s==="Injured"?"INJURED-avoid all loading":s==="Recovering"?"recovering-no heavy load":"sore-reduce intensity"; return bp.label+": "+d; })
+      .join("; ") || "none";
+    const muscStr = muscles.length > 0 ? muscles.join(", ") : "balanced full body";
+    const prompt =
+      "Design a HIIT circuit for: 6ft5, 240lb athlete, body recomposition goal.\n"+
+      "Environment: "+(envObj?envObj.label:env)+"\n"+
+      "Equipment: "+equipStr+"\n"+
+      "Energy: "+(energyObj?energyObj.label+" - "+energyObj.desc:energy)+"\n"+
+      "Injuries/limitations: "+injStr+"\n"+
+      "Focus: "+focus+"\n"+
+      "Muscles: "+muscStr+"\n\n"+
+      "Return ONLY this JSON:\n"+
+      "{\"name\":\"Short name\",\"estMins\":45,\"equip\":\"equipment used\",\"intensity\":\"Low|Moderate|High|Max\","+
+      "\"warmup\":[\"item\"],\"mid\":[\"item\"],\"main\":[\"item\"],\"ender\":[\"item\"],"+
+      "\"notes\":\"coaching note\",\"modifications\":\"injury mods or none\"}\n\n"+
+      "Format: x3: Exercise (12e) for rounds, 21-15-9: Exercise for classic HIIT, 15-12-10-6: for descending. e=each side. Distances in meters.\n"+
+      "warmup: 4-6 items. mid: 2-4 items (can be []). main: 3-6 items. ender: 1-2 items (can be []).\n"+
+      "Calibrate strictly to energy level. Never load injured areas.";
+    try { const r = await generate(prompt); setResult(r); }
+    catch (e) { setGenError(e.message || "Generation failed — try again."); }
+    setGenerating(false);
+  }
+
+  function handleSave() {
+    if (!result) return;
+    setSaved((p) => [{ ...result, id:"C"+(p.length+1), savedAt:new Date().toLocaleTimeString() }, ...p]);
+  }
+
+  const activeFlags = BODY_PARTS.filter((bp) => injuries[bp.id] !== "Good");
+  const energyObj = ENERGY_LEVELS.find((e) => e.id === energy) || ENERGY_LEVELS[2];
+
+  return (
+    <>
+      {!accepted && <DisclaimerModal onAccept={handleAccept} />}
+
+      {/* Disclaimer bar */}
+      <div className="disclaimer-bar">
+        AI-generated workouts for informational use only. Not medical advice. Exercise at your own risk.{" "}
+        <a href="#" onClick={(e) => { e.preventDefault(); setAccepted(false); }}>Read disclaimer</a>
+      </div>
+
+      <div className="tool-wrap">
+
+        {/* Header */}
+        <div style={{ padding:"28px 20px 16px", textAlign:"center" }}>
+          <div style={{ fontSize:11, letterSpacing:"0.2em", color:"rgba(255,255,255,0.3)", fontFamily:"'DM Mono',monospace", marginBottom:6 }}>FREE WORKOUT TOOL</div>
+          <div style={{ fontSize:26, fontWeight:700, letterSpacing:"-0.02em" }}>Circuit Generator</div>
+          <div style={{ fontSize:13, color:"rgba(255,255,255,0.4)", marginTop:6 }}>
+            Built around your body, your gear, and how you feel today
+          </div>
+
+          {/* Donation — top of page */}
+          <div style={{ marginTop:14, display:"flex", flexDirection:"column", alignItems:"center", gap:8 }}>
+            <div style={{ fontSize:11, color:"rgba(255,255,255,0.35)" }}>
+              Free tool · AI costs ~$0.02 per use
+            </div>
+            <a href="https://www.paypal.me/nickholtlcsw" target="_blank" rel="noopener noreferrer"
+              style={{ display:"inline-block", padding:"8px 20px", borderRadius:50, background:"rgba(255,183,77,0.15)", border:"1.5px solid #FFB74D", color:"#FFB74D", fontSize:12, fontWeight:700, textDecoration:"none" }}>
+              ☕ Support this tool via PayPal
+            </a>
+          </div>
+          {saved.length > 0 && (
+            <button onClick={() => setShowSaved((s) => !s)}
+              style={{ marginTop:12, padding:"6px 16px", borderRadius:50, border:"1px solid rgba(255,255,255,0.15)", background:"transparent", color:"rgba(255,255,255,0.5)", fontSize:12 }}>
+              {showSaved ? "Hide" : "View"} saved ({saved.length})
+            </button>
+          )}
+        </div>
+
+        {/* Saved drawer */}
+        {showSaved && saved.length > 0 && (
+          <div style={{ margin:"0 16px 16px", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:18, padding:16 }}>
+            {saved.map((c, i) => (
+              <div key={i} style={{ padding:"10px 0", borderBottom:i<saved.length-1?"1px solid rgba(255,255,255,0.06)":"none" }}>
+                <div style={{ display:"flex", justifyContent:"space-between" }}>
+                  <div>
+                    <span style={{ fontWeight:700, color:"#CE93D8", fontFamily:"'DM Mono',monospace", marginRight:8 }}>{c.id}</span>
+                    <span style={{ fontSize:14, fontWeight:600 }}>{c.name}</span>
+                  </div>
+                  <span style={{ fontSize:11, color:"rgba(255,255,255,0.3)" }}>{c.savedAt}</span>
+                </div>
+                <div style={{ fontSize:11, color:"rgba(255,255,255,0.35)", marginTop:3 }}>{c.intensity} · ~{c.estMins} min</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div style={{ padding:"0 16px" }}>
+
+          {/* BODY STATUS */}
+          <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:18, padding:16, marginBottom:16 }}>
+            <div style={{ fontSize:10, fontWeight:700, color:"rgba(255,255,255,0.35)", letterSpacing:"0.1em", marginBottom:12, fontFamily:"'DM Mono',monospace" }}>BODY STATUS</div>
+            {BODY_PARTS.map((bp) => {
+              const status = injuries[bp.id];
+              const opts = bp.recovering ? ["Good","Sore","Injured","Recovering"] : ["Good","Sore","Injured"];
+              return (
+                <div key={bp.id} style={{ display:"flex", alignItems:"center", marginBottom:8, gap:8 }}>
+                  <div style={{ fontSize:12, fontWeight:500, color:"rgba(255,255,255,0.6)", width:90, flexShrink:0 }}>{bp.label}</div>
+                  <div style={{ display:"flex", gap:5, flex:1 }}>
+                    {opts.map((s) => (
+                      <button key={s} onClick={() => setInjury(bp.id, s)}
+                        style={{ flex:1, padding:"4px 1px", borderRadius:7, border:"1.5px solid "+(status===s?injuryColor(s):"rgba(255,255,255,0.1)"),
+                          background:status===s?injuryColor(s)+"22":"transparent", color:status===s?injuryColor(s):"rgba(255,255,255,0.3)",
+                          fontSize:10, fontWeight:600 }}>{s}</button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+            {activeFlags.length > 0 && (
+              <div style={{ marginTop:8, padding:"8px 12px", background:"rgba(239,83,80,0.08)", borderRadius:10, fontSize:11, color:"rgba(239,83,80,0.9)", fontFamily:"'DM Mono',monospace" }}>
+                {activeFlags.map((b) => b.label+": "+injuries[b.id]).join(" · ")}
+              </div>
+            )}
+            <div style={{ marginTop:18 }}>
+              <div style={{ fontSize:10, fontWeight:700, color:"rgba(255,255,255,0.35)", letterSpacing:"0.1em", marginBottom:10, fontFamily:"'DM Mono',monospace" }}>ENERGY / HOW HARD TO GO TODAY</div>
+              <div style={{ display:"flex", gap:6 }}>
+                {ENERGY_LEVELS.map((e) => { const active=energy===e.id; const col=energyCol(e.id); return (
+                  <button key={e.id} onClick={() => setEnergy(e.id)}
+                    style={{ flex:1, padding:"8px 2px", borderRadius:10, border:"1.5px solid "+(active?col:"rgba(255,255,255,0.1)"), background:active?col+"20":"transparent", textAlign:"center" }}>
+                    <div style={{ fontSize:18, marginBottom:2 }}>{e.emoji}</div>
+                    <div style={{ fontSize:10, fontWeight:600, color:active?col:"rgba(255,255,255,0.4)" }}>{e.label}</div>
+                  </button>
+                );})}
+              </div>
+              <div style={{ fontSize:11, color:"rgba(255,255,255,0.35)", marginTop:8, textAlign:"center" }}>{energyObj.desc}</div>
+            </div>
+          </div>
+
+          {/* ENVIRONMENT */}
+          <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:18, padding:16, marginBottom:16 }}>
+            <div style={{ fontSize:10, fontWeight:700, color:"rgba(255,255,255,0.35)", letterSpacing:"0.1em", marginBottom:12, fontFamily:"'DM Mono',monospace" }}>ENVIRONMENT</div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8 }}>
+              {ENVIRONMENTS.map((e) => { const active=env===e.id; return (
+                <button key={e.id} onClick={() => handleEnvChange(e.id)}
+                  style={{ padding:"10px 4px", borderRadius:12, border:"1.5px solid "+(active?"#4FC3F7":"rgba(255,255,255,0.1)"), background:active?"rgba(79,195,247,0.12)":"rgba(255,255,255,0.02)", textAlign:"center" }}>
+                  <div style={{ fontSize:20, marginBottom:3 }}>{ENV_EMOJIS[e.id]||"📍"}</div>
+                  <div style={{ fontSize:11, fontWeight:600, color:active?"#4FC3F7":"rgba(255,255,255,0.55)", lineHeight:1.2 }}>{e.label}</div>
+                </button>
+              );})}
+            </div>
+          </div>
+
+          {/* EQUIPMENT */}
+          <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:18, padding:16, marginBottom:16 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+              <div style={{ fontSize:10, fontWeight:700, color:"rgba(255,255,255,0.35)", letterSpacing:"0.1em", fontFamily:"'DM Mono',monospace" }}>EQUIPMENT — {equip.size} selected</div>
+              <button onClick={() => setEquip(new Set())} style={{ fontSize:11, color:"rgba(255,255,255,0.3)", background:"none", border:"none" }}>Clear</button>
+            </div>
+            {EQUIP_GROUPS.map((g) => (
+              <div key={g.group} style={{ marginBottom:12 }}>
+                <div style={{ fontSize:10, color:"rgba(255,255,255,0.22)", letterSpacing:"0.08em", marginBottom:7, fontFamily:"'DM Mono',monospace" }}>{g.group.toUpperCase()}</div>
+                <div style={{ display:"flex", flexWrap:"wrap", gap:7 }}>
+                  {g.items.map((id) => { const active=equip.has(id); return (
+                    <button key={id} onClick={() => toggleEquip(id)}
+                      style={{ padding:"5px 11px", borderRadius:50, border:"1.5px solid "+(active?"#81C784":"rgba(255,255,255,0.1)"),
+                        background:active?"rgba(129,199,132,0.15)":"transparent", color:active?"#81C784":"rgba(255,255,255,0.4)", fontSize:12, fontWeight:500 }}>{id}</button>
+                  );})}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* FOCUS & MUSCLES */}
+          <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:18, padding:16, marginBottom:16 }}>
+            <div style={{ fontSize:10, fontWeight:700, color:"rgba(255,255,255,0.35)", letterSpacing:"0.1em", marginBottom:10, fontFamily:"'DM Mono',monospace" }}>SESSION FOCUS</div>
+            <div style={{ display:"flex", flexWrap:"wrap", gap:7, marginBottom:18 }}>
+              {FOCUS_OPTIONS.map((f) => { const active=focus===f; return (
+                <button key={f} onClick={() => setFocus(f)}
+                  style={{ padding:"6px 12px", borderRadius:50, border:"1.5px solid "+(active?"#CE93D8":"rgba(255,255,255,0.1)"), background:active?"rgba(206,147,216,0.15)":"transparent", color:active?"#CE93D8":"rgba(255,255,255,0.4)", fontSize:12, fontWeight:500 }}>{f}</button>
+              );})}
+            </div>
+            <div style={{ fontSize:10, fontWeight:700, color:"rgba(255,255,255,0.35)", letterSpacing:"0.1em", marginBottom:10, fontFamily:"'DM Mono',monospace" }}>EMPHASIZE (optional)</div>
+            <div style={{ display:"flex", flexWrap:"wrap", gap:7 }}>
+              {MUSCLE_OPTIONS.map((m) => { const active=muscles.includes(m); return (
+                <button key={m} onClick={() => toggleMuscle(m)}
+                  style={{ padding:"6px 12px", borderRadius:50, border:"1.5px solid "+(active?"#FFB74D":"rgba(255,255,255,0.1)"), background:active?"rgba(255,183,77,0.15)":"transparent", color:active?"#FFB74D":"rgba(255,255,255,0.4)", fontSize:12, fontWeight:500 }}>{m}</button>
+              );})}
+            </div>
+          </div>
+
+          {/* GENERATE */}
+          <button onClick={handleGenerate} disabled={generating}
+            style={{ width:"100%", padding:16, borderRadius:16, border:"none", marginBottom:16,
+              background:generating?"rgba(255,255,255,0.06)":"linear-gradient(135deg,#CE93D8,#F06292,#4FC3F7)",
+              color:generating?"rgba(255,255,255,0.4)":"#000", fontSize:16, fontWeight:800, cursor:generating?"not-allowed":"pointer" }}>
+            {generating ? "Generating your circuit..." : "Generate Circuit"}
+          </button>
+
+          {genError && (
+            <div style={{ padding:"12px 16px", background:"rgba(239,83,80,0.1)", border:"1px solid rgba(239,83,80,0.3)", borderRadius:12, fontSize:13, color:"#ef9a9a", marginBottom:16 }}>
+              {genError}
+            </div>
+          )}
+
+          {/* RESULT */}
+          {result && (
+            <div style={{ background:"rgba(206,147,216,0.08)", border:"1px solid rgba(206,147,216,0.3)", borderRadius:18, padding:18, marginBottom:24 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:20, fontWeight:800, color:"#CE93D8", marginBottom:6 }}>{result.name}</div>
+                  <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
+                    <span style={{ fontSize:12, color:"rgba(255,255,255,0.45)", fontFamily:"'DM Mono',monospace" }}>~{result.estMins} min</span>
+                    {result.intensity && <span style={{ fontSize:12, fontWeight:700, padding:"2px 9px", borderRadius:6, color:intensityCol(result.intensity), background:intensityCol(result.intensity)+"22" }}>{result.intensity}</span>}
+                  </div>
+                  {result.equip && <div style={{ fontSize:11, color:"rgba(255,255,255,0.3)", marginTop:5 }}>{result.equip}</div>}
+                </div>
+                <button onClick={handleSave} style={{ padding:"7px 14px", borderRadius:50, border:"1.5px solid #CE93D8", background:"rgba(206,147,216,0.12)", color:"#CE93D8", fontSize:12, fontWeight:700, marginLeft:10, flexShrink:0 }}>
+                  + Save
+                </button>
+              </div>
+              {[{lbl:"WARM UP",items:result.warmup,col:"#4FC3F7"},{lbl:"MID",items:result.mid,col:"#FFB74D"},{lbl:"MAIN",items:result.main,col:"#F06292"},{lbl:"ENDER",items:result.ender,col:"#81C784"}].map((sec) =>
+                sec.items && sec.items.length > 0 && (
+                  <div key={sec.lbl} style={{ marginBottom:14 }}>
+                    <div style={{ fontSize:10, fontWeight:700, color:sec.col, letterSpacing:"0.1em", marginBottom:7, fontFamily:"'DM Mono',monospace" }}>{sec.lbl}</div>
+                    {sec.items.map((item, i) => (
+                      <div key={i} style={{ fontSize:13, color:"rgba(255,255,255,0.85)", padding:"5px 0", borderBottom:i<sec.items.length-1?"1px solid rgba(255,255,255,0.05)":"none" }}>· {item}</div>
+                    ))}
+                  </div>
+                )
+              )}
+              {result.notes && <div style={{ padding:"10px 12px", background:"rgba(255,255,255,0.05)", borderRadius:10, fontSize:12, color:"rgba(255,255,255,0.6)", marginBottom:8 }}>{result.notes}</div>}
+              {result.modifications && result.modifications !== "none" && (
+                <div style={{ padding:"10px 12px", background:"rgba(255,183,77,0.08)", borderRadius:10, fontSize:12, color:"#FFB74D" }}>Modifications: {result.modifications}</div>
+              )}
+              <button onClick={handleGenerate} style={{ width:"100%", marginTop:14, padding:11, borderRadius:12, border:"1px solid rgba(206,147,216,0.3)", background:"transparent", color:"#CE93D8", fontSize:13, fontWeight:700 }}>
+                Regenerate
+              </button>
+
+              {/* CTA */}
+              <div style={{ marginTop:20, padding:"16px", background:"rgba(79,195,247,0.08)", border:"1px solid rgba(79,195,247,0.2)", borderRadius:14, textAlign:"center" }}>
+                <div style={{ fontSize:13, color:"rgba(255,255,255,0.6)", marginBottom:8 }}>
+                  Working through an injury or navigating stress around your health?
+                </div>
+                <a href="https://nickholtlcsw.com" target="_blank" rel="noopener noreferrer"
+                  style={{ display:"inline-block", padding:"9px 20px", borderRadius:50, background:"rgba(79,195,247,0.15)", border:"1.5px solid #4FC3F7", color:"#4FC3F7", fontSize:13, fontWeight:700, textDecoration:"none" }}>
+                  Work with Nick → nickholtlcsw.com
+                </a>
+              </div>
+
+              {/* Donation */}
+              <div style={{ marginTop:12, padding:"14px 16px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:14, textAlign:"center" }}>
+                <div style={{ fontSize:12, color:"rgba(255,255,255,0.4)", marginBottom:10 }}>
+                  This tool is free. If it was useful, a small donation helps cover the AI costs and keeps it running.
+                </div>
+                <a href="https://www.paypal.me/nickholtlcsw" target="_blank" rel="noopener noreferrer"
+                  style={{ display:"inline-block", padding:"9px 20px", borderRadius:50, background:"rgba(255,183,77,0.15)", border:"1.5px solid #FFB74D", color:"#FFB74D", fontSize:13, fontWeight:700, textDecoration:"none" }}>
+                  ☕ Buy me a coffee via PayPal
+                </a>
+              </div>
+            </div>
+          )}
+
+        </div>
+      </div>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(CircuitGenerator));
+</script>
+
+</body>
+</html>
