@@ -67,7 +67,7 @@ exports.handler = async (event) => {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "model: "claude-sonnet-4-5",
         max_tokens: 900,
         system: "You are an elite fitness coach. Return ONLY valid JSON with no markdown or extra text.",
         messages: [{ role: "user", content: prompt }],
